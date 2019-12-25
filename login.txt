@@ -1,0 +1,144 @@
+import React from 'react';
+import { StyleSheet, ActivityIndicator,StatusBar,  AsyncStorage, Text, View, TouchableOpacity, TextInput, Button } from 'react-native';
+import { createAppContainer, createSwitchNavigator }  from 'react-navigation';
+import { createStackNavigator } from 'react-navigation-stack';
+
+const userInfo = {user:'admin',password:'12345'};
+
+class LoginScreen extends React.Component {
+
+  constructor(props){
+    super(props);
+    this.state = {username:'',password:''}
+  }
+static navigationOptions = {
+  header:null
+};
+
+  render() {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.welcome}>Авторизация</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Username"
+          onChangeText={(username)=>this.setState({username})}
+          value={this.state.username}
+        />
+        <TextInput
+          style={styles.input}
+          placeholder="Password"
+          onChangeText={(password)=>this.setState({password})}
+          value={this.state.password}
+          secureTextEntry={true}
+        />
+        <TouchableOpacity
+          style={styles.btnEnter}
+          onPress={this._signin}
+        >
+          <Text  style={styles.btnEnterText}>Войти</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  _signin = async () => {
+    if(userInfo.username===this.state.username && userInfo.password===this.state.password) {
+      alert('logged')
+      await AsyncStorage.setItem('logged',true);
+      this.props.navigation.navigate('App');
+    }else{
+      alert('Неправильные данные авторизации');
+    }
+  }
+}
+
+class HomeScreen extends React.Component {
+  render(){
+    return(
+      <View style={styles.container}>
+        <Text style={styles.welcome}>
+        Добро пожаловать на домашнюю страницу
+        </Text>
+        <Button onPress={this._logout} title="Logout"/>
+      </View>
+    );
+  }
+  _logout = async () => {
+    await AsyncStorage.clear();
+    this.props.navigation.navigate('Auth');
+  }
+}
+
+class AuthLoadingScreen extends React.Component {
+  constructor(props){
+    super(props);
+    this._loadData();
+  }
+  render(){
+    return(
+      <View style={styles.container}>
+        <ActivityIndicator/>
+        <StatusBar barStyle="default"/>
+      </View>
+    );
+  }
+  _loadData = async () => {
+    const logged = await AsyncStorage.getItem('logged');
+    this.props.navigation.navigate(logged!== true ? 'Auth': 'App')
+  }
+}
+
+const AppStack = createStackNavigator({Home: HomeScreen});
+const AuthStack = createStackNavigator({Login: LoginScreen});
+
+export default createAppContainer(
+  createSwitchNavigator(
+    {
+      AuthLoading: AuthLoadingScreen,
+      App: AppStack,
+      Auth: AuthStack
+    },{
+      initialRouteName: 'AuthLoading'
+    }
+  )
+);
+
+
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F5FCFF'
+  },
+  welcome: {
+    fontSize: 20,
+    textAlign: 'center',
+    margin: 10,
+  },
+  input: {
+    margin: 15,
+    height: 40,
+    padding:5,
+    fontSize:16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#428AF8',
+   
+  },
+  btnEnter: {
+    justifyContent: 'center',
+    flexDirection: 'row',
+    backgroundColor: '#428AF8',
+    alignItems: 'center',
+    marginLeft: 15,
+    marginRight: 15,
+    padding: 10,
+  },
+  
+  btnEnterText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+})
